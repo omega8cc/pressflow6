@@ -3095,7 +3095,13 @@ function element_child($key) {
  * Get keys of a structured array tree element that are not properties (i.e., do not begin with '#').
  */
 function element_children($element) {
-  return array_filter(array_keys((array) $element), 'element_child');
+  $results = array();
+  foreach ((array) $element as $key => $value) {
+    if (!isset($key[0]) || $key[0] != '#') {
+      $results[] = $key;
+    }
+  }
+  return $results;
 }
 
 /**
