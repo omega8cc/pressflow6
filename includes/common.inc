@@ -1419,25 +1419,6 @@ function format_date($timestamp, $type = 'medium', $format = '', $timezone = NUL
  *   A string containing a URL to the given path.
  */
 function url($path = NULL, $options = array()) {
-  global $base_url, $language;
-  static $script;
-  static $cache;
-  static $language_url_rewrite_function;
-  static $custom_url_rewrite_outbound;
-  if (!isset($script)) {
-    // On some web servers, such as IIS, we can't omit "index.php". So, we
-    // generate "index.php?q=foo" instead of "?q=foo" on anything that is not
-    // Apache.
-    $script = (strpos($_SERVER['SERVER_SOFTWARE'], 'Apache') === FALSE) ? 'index.php' : '';
-  }
-  if (!isset($language_url_rewrite_function)) {
-    $language_url_rewrite_function = function_exists('language_url_rewrite');
-  }
-  if (!isset($custom_url_rewrite_outbound)) {
-    $custom_url_rewrite_outbound = function_exists('custom_url_rewrite_outbound');
-  }
-  $clean_url = variable_get('clean_url', '0');
-
   // Merge in defaults.
   $options += array(
     'fragment' => '',
@@ -1446,19 +1427,6 @@ function url($path = NULL, $options = array()) {
     'alias' => FALSE,
     'prefix' => ''
   );
-
-  $cid = md5(serialize(array($base_url, $language, $script, $clean_url, $language_url_rewrite_function, $custom_url_rewrite_outbound)));
-  if (empty($cache[$cid]->data)) {
-    $cache[$cid] = cache_get('url:' . $cid, 'cache');
-  }
-  $key = md5(serialize(array($path, $options)));
-  if (isset($cache[$cid]->data[$key])) {
-    return $cache[$cid]->data[$key];
-  }
-  if (!is_object($cache[$cid])) {
-    $cache[$cid] = new stdClass();
-  }
-
   if (!isset($options['external'])) {
     // Return an external link if $path contains an allowed absolute URL.
     // Only call the slow filter_xss_bad_protocol if $path contains a ':' before
@@ -1491,10 +1459,17 @@ function url($path = NULL, $options = array()) {
       $path .= (strpos($path, '?') !== FALSE ? '&' : '?') . $options['query'];
     }
     // Reassemble.
-    $output = $path . $options['fragment'];
-    late_cache_set_merge_locked('url:' . $cid, $key, $output, 'cache');
-    $cache[$cid]->data[$key] = $output;
-    return $output;
+    return $path . $options['fragment'];
+  }
+
+  global $base_url;
+  static $script;
+
+  if (!isset($script)) {
+    // On some web servers, such as IIS, we can't omit "index.php". So, we
+    // generate "index.php?q=foo" instead of "?q=foo" on anything that is not
+    // Apache.
+    $script = (strpos($_SERVER['SERVER_SOFTWARE'], 'Apache') === FALSE) ? 'index.php' : '';
   }
 
   if (!isset($options['base_url'])) {
@@ -1525,10 +1500,10 @@ function url($path = NULL, $options = array()) {
   if (variable_get('clean_url', '0')) {
     // With Clean URLs.
     if ($options['query']) {
-      $output = $base . $path .'?'. $options['query'] . $options['fragment'];
+      return $base . $path .'?'. $options['query'] . $options['fragment'];
     }
     else {
-      $output = $base . $path . $options['fragment'];
+      return $base . $path . $options['fragment'];
     }
   }
   else {
@@ -1541,42 +1516,10 @@ function url($path = NULL, $options = array()) {
       $variables[] = $options['query'];
     }
     if ($query = join('&', $variables)) {
-      $output = $base . $script .'?'. $query . $options['fragment'];
+      return $base . $script .'?'. $query . $options['fragment'];
     }
     else {
-      $output = $base . $options['fragment'];
-    }
-  }
-  late_cache_set_merge_locked('url:' . $cid, $key, $output, 'cache');
-  $cache[$cid]->data[$key] = $output;
-  return $output;
-}
-
-function late_cache_set_merge_locked($cid = NULL, $key = NULL, $data = NULL, $table = NULL) {
-  static $values;
-  static $registered;
-
-  if (!empty($cid)) {
-    $values[$table][$cid][$key] = $data;
-    if (empty($registered)) {
-      $registered = TRUE;
-      register_shutdown_function('late_cache_set_merge_locked');
-    }
-    return;
-  }
-
-  foreach ($values as $table => $info) {
-    foreach ($info as $cid => $set) {
-      $lock_name = 'late_cache_set_merge_locked:' . $table . ':' . $cid;
-      if (!lock_acquire($lock_name)) {
-        return;
-      }
-      $cached_data = cache_get($cid, $table);
-      if (!empty($cached_data->data)) {
-        $set = array_merge($cached_data->data, $set);
-      }
-      cache_set($cid, $set, $table, CACHE_TEMPORARY);
-      lock_release($lock_name);
+      return $base . $options['fragment'];
     }
   }
 }
