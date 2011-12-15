@@ -1590,13 +1590,11 @@ function late_cache_set_merge_locked($cid = NULL, $key = NULL, $data = NULL, $ta
  *   An HTML string ready for insertion in a tag.
  */
 function drupal_attributes($attributes = array()) {
-  if (is_array($attributes)) {
-    $t = '';
-    foreach ($attributes as $key => $value) {
-      $t .= " $key=".'"'. check_plain($value) .'"';
-    }
-    return $t;
+  $t = '';
+  foreach ((array) $attributes as $attribute => $data) {
+    $t .= " $attribute=".'"'. check_plain($data) .'"';
   }
+  return $t;
 }
 
 /**
