@@ -310,10 +310,20 @@ function menu_get_item($path = NULL, $router_item = NULL) {
   }
   if (!isset($router_items[$path])) {
     $original_map = arg(NULL, $path);
-    $parts = array_slice($original_map, 0, MENU_MAX_PARTS);
-    list($ancestors, $placeholders) = menu_get_ancestors($parts);
 
-    if ($router_item = db_fetch_array(db_query_range('SELECT * FROM {menu_router} WHERE path IN ('. implode (',', $placeholders) .') ORDER BY fit DESC', $ancestors, 0, 1))) {
+    // Since there is no limit to the length of $path, use a hash to keep it
+    // short yet unique.
+    $cid = "menu_item:" . hash('sha256', $path);
+    if ($cached = cache_get($cid, 'cache_menu')) {
+      $router_item = $cached->data;
+    }
+    else {
+      $parts = array_slice($original_map, 0, MENU_MAX_PARTS);
+      list($ancestors, $placeholders) = menu_get_ancestors($parts);
+      $router_item = db_fetch_array(db_query_range('SELECT * FROM {menu_router} WHERE path IN ('. implode (',', $placeholders) .') ORDER BY fit DESC', $ancestors, 0, 1));
+      cache_set($cid, $router_item, 'cache_menu');
+    }
+    if ($router_item) {
       $map = _menu_translate($router_item, $original_map);
       if ($map === FALSE) {
         $router_items[$path] = FALSE;
