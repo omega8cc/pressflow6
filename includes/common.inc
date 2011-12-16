@@ -1427,8 +1427,8 @@ function url($path = NULL, $options = array()) {
   if (!isset($script)) {
     // On some web servers, such as IIS, we can't omit "index.php". So, we
     // generate "index.php?q=foo" instead of "?q=foo" on anything that is not
-    // Apache.
-    $script = (strpos($_SERVER['SERVER_SOFTWARE'], 'Apache') === FALSE) ? 'index.php' : '';
+    // Apache or Nginx.
+    $script = in_array($_SERVER['SERVER_SOFTWARE'], array('Barracuda', 'Nginx', 'Apache')) == FALSE ? 'index.php' : '';
   }
   if (!isset($language_url_rewrite_function)) {
     $language_url_rewrite_function = function_exists('language_url_rewrite');
