@@ -646,11 +646,15 @@ function taxonomy_node_get_terms_by_vocabulary($node, $vid, $key = 'tid') {
 /**
  * Find all terms associated with the given node, ordered by vocabulary and term weight.
  */
-function taxonomy_node_get_terms($node, $key = 'tid') {
+function taxonomy_node_get_terms($node, $key = 'tid', $reset = FALSE) {
   static $terms;
 
+  if ($reset) {
+    unset($terms[$node->vid]);
+  }
+
   if (!isset($terms[$node->vid][$key])) {
-    $result = db_query(db_rewrite_sql('SELECT t.* FROM {term_node} r INNER JOIN {term_data} t ON r.tid = t.tid INNER JOIN {vocabulary} v ON t.vid = v.vid WHERE r.vid = %d ORDER BY v.weight, t.weight, t.name', 't', 'tid'), $node->vid);
+    $result = db_query(db_rewrite_sql('SELECT t.*,v.weight AS v_weight_unused FROM {term_node} r INNER JOIN {term_data} t ON r.tid = t.tid INNER JOIN {vocabulary} v ON t.vid = v.vid WHERE r.vid = %d ORDER BY v.weight, t.weight, t.name', 't', 'tid'), $node->vid);
     $terms[$node->vid][$key] = array();
     while ($term = db_fetch_object($result)) {
       $terms[$node->vid][$key][$term->$key] = $term;
@@ -681,7 +685,7 @@ function taxonomy_node_validate(&$node) {
 /**
  * Save term associations for a given node.
  */
-function taxonomy_node_save($node, $terms) {
+function taxonomy_node_save(&$node, $terms) {
 
   taxonomy_node_delete_revision($node);
 
@@ -738,6 +742,9 @@ function taxonomy_node_save($node, $terms) {
       }
     }
   }
+
+  // Flush the term "cache" for this node
+  $node->taxonomy = taxonomy_node_get_terms($node, 'tid', TRUE);
 }
 
 /**
@@ -1244,7 +1251,7 @@ function taxonomy_render_nodes($result) {
 /**
  * Implementation of hook_nodeapi().
  */
-function taxonomy_nodeapi($node, $op, $arg = 0) {
+function taxonomy_nodeapi(&$node, $op, $arg = 0) {
   switch ($op) {
     case 'load':
       $output['taxonomy'] = taxonomy_node_get_terms($node);
