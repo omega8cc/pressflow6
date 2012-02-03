@@ -1500,8 +1500,8 @@ function url($path = NULL, $options = array()) {
   if (!isset($script)) {
     // On some web servers, such as IIS, we can't omit "index.php". So, we
     // generate "index.php?q=foo" instead of "?q=foo" on anything that is not
-    // Apache.
-    $script = (strpos($_SERVER['SERVER_SOFTWARE'], 'Apache') === FALSE) ? 'index.php' : '';
+    // Apache or Nginx.
+    $script = in_array($_SERVER['SERVER_SOFTWARE'], array('Barracuda', 'Nginx', 'Apache')) == FALSE ? 'index.php' : '';
   }
 
   if (!isset($options['base_url'])) {
@@ -2728,7 +2728,7 @@ function page_set_cache() {
         'created' => $_SERVER['REQUEST_TIME'],
         'headers' => array(),
       );
-    
+
       // Restore preferred header names based on the lower-case names returned
       // by drupal_get_header().
       $header_names = _drupal_set_preferred_header_name();
