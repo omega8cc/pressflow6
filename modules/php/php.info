@@ -3,12 +3,3 @@ description = Allows embedded PHP code/snippets to be evaluated.
 package = Core - optional
 version = VERSION
 core = 6.x
-<<<<<<< HEAD
-
-; Information added by drupal.org packaging script on 2012-02-01
-version = "6.24"
-project = "drupal"
-datestamp = "1328134267"
-
-=======
->>>>>>> fc46cb991451b7f1b7accc27906346a826af666e
