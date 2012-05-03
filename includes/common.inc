@@ -1504,7 +1504,7 @@ function url($path = NULL, $options = array()) {
     // On some web servers, such as IIS, we can't omit "index.php". So, we
     // generate "index.php?q=foo" instead of "?q=foo" on anything that is not
     // Apache or Nginx.
-    $script = in_array($_SERVER['SERVER_SOFTWARE'], array('Barracuda', 'Nginx', 'Apache')) == FALSE ? 'index.php' : '';
+    $script = in_array($_SERVER['SERVER_SOFTWARE'], array('ApacheSolaris', 'Nginx', 'Apache')) == FALSE ? 'index.php' : '';
   }
 
   if (!isset($options['base_url'])) {

@@ -172,16 +172,18 @@ function file_check_directory(&$directory, $mode = 0, $form_item = NULL) {
     }
   }
 
-  if ((file_directory_path() == $directory || file_directory_temp() == $directory) && !is_file("$directory/.htaccess")) {
-    $htaccess_lines = "SetHandler Drupal_Security_Do_Not_Remove_See_SA_2006_006\nOptions None\nOptions +FollowSymLinks";
-    if (($fp = fopen("$directory/.htaccess", 'w')) && fputs($fp, $htaccess_lines)) {
-      fclose($fp);
-      chmod($directory .'/.htaccess', 0664);
-    }
-    else {
-      $variables = array('%directory' => $directory, '!htaccess' => '<br />'. nl2br(check_plain($htaccess_lines)));
-      form_set_error($form_item, t("Security warning: Couldn't write .htaccess file. Please create a .htaccess file in your %directory directory which contains the following lines: <code>!htaccess</code>", $variables));
-      watchdog('security', "Security warning: Couldn't write .htaccess file. Please create a .htaccess file in your %directory directory which contains the following lines: <code>!htaccess</code>", $variables, WATCHDOG_ERROR);
+  if (isset($_SERVER['SERVER_SOFTWARE']) && !preg_match("/(?:ApacheSolaris|Nginx)/i", $_SERVER['SERVER_SOFTWARE'])) {
+    if ((file_directory_path() == $directory || file_directory_temp() == $directory) && !is_file("$directory/.htaccess")) {
+      $htaccess_lines = "SetHandler Drupal_Security_Do_Not_Remove_See_SA_2006_006\nOptions None\nOptions +FollowSymLinks";
+      if (($fp = fopen("$directory/.htaccess", 'w')) && fputs($fp, $htaccess_lines)) {
+        fclose($fp);
+        chmod($directory .'/.htaccess', 0664);
+      }
+      else {
+        $variables = array('%directory' => $directory, '!htaccess' => '<br />'. nl2br(check_plain($htaccess_lines)));
+        form_set_error($form_item, t("Security warning: Couldn't write .htaccess file. Please create a .htaccess file in your %directory directory which contains the following lines: <code>!htaccess</code>", $variables));
+        watchdog('security', "Security warning: Couldn't write .htaccess file. Please create a .htaccess file in your %directory directory which contains the following lines: <code>!htaccess</code>", $variables, WATCHDOG_ERROR);
+      }
     }
   }
 
@@ -869,7 +871,7 @@ function file_save_data($data, $dest, $replace = FILE_EXISTS_RENAME) {
 /**
  * Set the status of a file.
  *
- * @param $file 
+ * @param $file
  *   A Drupal file object.
  * @param $status
  *   A status value to set the file to. One of:
@@ -898,7 +900,7 @@ function file_transfer($source, $headers) {
   if (ob_get_level()) {
     ob_end_clean();
   }
-  
+
   // IE cannot download private files because it cannot store files downloaded
   // over https in the browser cache. The problem can be solved by sending
   // custom headers to IE. See http://support.microsoft.com/kb/323308/en-us
