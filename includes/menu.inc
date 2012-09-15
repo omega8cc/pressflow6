@@ -1039,6 +1039,11 @@ function _menu_tree_check_access(&$tree) {
   $new_tree = array();
   foreach ($tree as $key => $v) {
     $item = &$tree[$key]['link'];
+    // Do not load hidden menu items if not in active breadcrumb trail and
+    // user can't administer the menu.
+    if (!empty($item['hidden']) && empty($item['in_active_trail']) && !user_access('administer menu')) {
+      continue;
+    }
     _menu_link_translate($item);
     if ($item['access']) {
       if ($tree[$key]['below']) {
