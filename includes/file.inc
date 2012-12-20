@@ -443,6 +443,9 @@ function file_munge_filename($filename, $extensions, $alerts = TRUE) {
 
   // Allow potentially insecure uploads for very savvy users and admin
   if (!variable_get('allow_insecure_uploads', 0)) {
+    // Remove any null bytes. See http://php.net/manual/en/security.filesystem.nullbytes.php
+    $filename = str_replace(chr(0), '', $filename);
+
     $whitelist = array_unique(explode(' ', trim($extensions)));
 
     // Split the filename up by periods. The first part becomes the basename
@@ -902,7 +905,7 @@ function file_transfer($source, $headers) {
   }
 
   // IE cannot download private files because it cannot store files downloaded
-  // over https in the browser cache. The problem can be solved by sending
+  // over HTTPS in the browser cache. The problem can be solved by sending
   // custom headers to IE. See http://support.microsoft.com/kb/323308/en-us
   if (isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] == 'on')) {
     drupal_set_header('Cache-Control: private');
