@@ -1387,6 +1387,10 @@ function format_date($timestamp, $type = 'medium', $format = '', $timezone = NUL
     else if (strpos('BdgGhHiIjLmnsStTUwWYyz', $c) !== FALSE) {
       $date .= gmdate($c, $timestamp);
     }
+    // Allow format_date to use ISO 8601 url: http://drupal.org/node/972532.
+    else if ($c == 'c' && version_compare(PHP_VERSION, '5.0.0', '>=')) {
+      $date .= gmdate($c, $timestamp - $timezone);
+    }
     else if ($c == 'r') {
       $date .= format_date($timestamp - $timezone, 'custom', 'D, d M Y H:i:s O', $timezone, $langcode);
     }
