@@ -1049,11 +1049,13 @@ function node_view($node, $teaser = FALSE, $page = FALSE, $links = TRUE) {
  * Apply filters and build the node's standard elements.
  */
 function node_prepare($node, $teaser = FALSE) {
-  // First we'll overwrite the existing node teaser and body with
-  // the filtered copies! Then, we'll stick those into the content
-  // array and set the read more flag if appropriate.
-  $node->readmore = $node->teaser != $node->body;
+  // Issue #201854 patch http://drupal.org/node/201854#comment-794232
+  // First, set the read more flag if appropriate, ignoring leading and
+  // trailing whitespace.
+  $node->readmore = trim($node->body) && (trim($node->teaser) != trim($node->body));
 
+  // Overwrite the existing node teaser or body with the filtered copy
+  // and stick this into the content array.
   if ($teaser == FALSE) {
     $node->body = check_markup($node->body, $node->format, FALSE);
   }
