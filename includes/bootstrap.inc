@@ -997,7 +997,7 @@ function drupal_page_cache_header_external() {
   // by sending an Expires date in the past. HTTP/1.1 clients ignores the
   // Expires header if a Cache-Control: max-age= directive is specified (see RFC
   // 2616, section 14.9.3).
-  drupal_set_header('Expires', 'Sun, 11 Mar 1984 12:00:00 GMT');
+  drupal_set_header('Expires', 'Tue, 24 Jan 1984 08:00:00 GMT');
 
   // Allow HTTP proxies to cache pages for anonymous users without a session
   // cookie. The Vary header is used to indicates the set of request-header
@@ -1081,7 +1081,7 @@ function drupal_page_cache_header(stdClass $cache) {
   // by sending an Expires date in the past. HTTP/1.1 clients ignores the
   // Expires header if a Cache-Control: max-age= directive is specified (see RFC
   // 2616, section 14.9.3).
-  $default_headers['Expires'] = 'Sun, 11 Mar 1984 12:00:00 GMT';
+  $default_headers['Expires'] = 'Tue, 24 Jan 1984 08:00:00 GMT';
 
   drupal_send_headers($default_headers);
 
