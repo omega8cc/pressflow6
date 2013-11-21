@@ -195,6 +195,10 @@ function file_check_directory(&$directory, $mode = 0, $form_item = NULL) {
  *   already present. Defaults to FALSE.
  */
 function file_create_htaccess($directory, $form_item = NULL, $force_overwrite = FALSE) {
+
+  // Skip this on BOA since .htaccess is never used in Nginx.
+  return;
+
   if (!is_file("$directory/.htaccess") || $force_overwrite) {
     $htaccess_lines = file_htaccess_lines();
     if (($fp = fopen("$directory/.htaccess", 'w')) && fputs($fp, $htaccess_lines)) {
