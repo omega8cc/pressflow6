@@ -195,6 +195,26 @@ function file_check_directory(&$directory, $mode = 0, $form_item = NULL) {
  *   already present. Defaults to FALSE.
  */
 function file_create_htaccess($directory, $form_item = NULL, $force_overwrite = FALSE) {
+
+  // Test the web server identity.
+  if (!isset($_SERVER['SERVER_SOFTWARE'])) {
+    // Skip this in Drush where SERVER_SOFTWARE is not set and .htaccess never used anyway.
+    $use_htaccess = FALSE;
+  }
+  elseif (isset($_SERVER['SERVER_SOFTWARE']) && preg_match("/Nginx/i", $_SERVER['SERVER_SOFTWARE'])) {
+    $use_htaccess = FALSE;
+  }
+  elseif (isset($_SERVER['SERVER_SOFTWARE']) && preg_match("/Apache/i", $_SERVER['SERVER_SOFTWARE'])) {
+    $use_htaccess = TRUE;
+  }
+  else {
+    $use_htaccess = FALSE;
+  }
+
+  if (!$use_htaccess) {
+    return;
+  }
+
   if (!is_file("$directory/.htaccess") || $force_overwrite) {
     $htaccess_lines = file_htaccess_lines();
     if (($fp = fopen("$directory/.htaccess", 'w')) && fputs($fp, $htaccess_lines)) {
