@@ -119,17 +119,14 @@ function system_requirements($phase) {
 
   // Test the web server identity.
   if (isset($_SERVER['SERVER_SOFTWARE']) && preg_match("/(?:ApacheSolaris|Nginx)/i", $_SERVER['SERVER_SOFTWARE'])) {
-    // Skip this on BOA and Nginx since .htaccess is never used in Nginx.
-    $is_nginx = TRUE;
+    $is_nginx = TRUE; // Skip this on BOA since .htaccess is never used in Nginx.
   }
   elseif (!isset($_SERVER['SERVER_SOFTWARE'])) {
-    // Skip this in Aegir backend where SERVER_SOFTWARE is not set, since .htaccess is never used in Nginx.
-    $is_nginx = TRUE;
+    $is_nginx = TRUE; // Skip this on BOA since .htaccess is never used in Nginx.
   }
   else {
     $is_nginx = FALSE;
   }
-
   // Test the contents of the .htaccess files.
   if ($phase == 'runtime' && !$is_nginx) {
     // Try to write the .htaccess files first, to prevent false alarms in case
