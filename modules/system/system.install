@@ -121,9 +121,6 @@ function system_requirements($phase) {
   if (isset($_SERVER['SERVER_SOFTWARE']) && preg_match("/(?:ApacheSolaris|Nginx)/i", $_SERVER['SERVER_SOFTWARE'])) {
     $is_nginx = TRUE; // Skip this on BOA since .htaccess is never used in Nginx.
   }
-  elseif (!isset($_SERVER['SERVER_SOFTWARE'])) {
-    $is_nginx = TRUE; // Skip this on BOA since .htaccess is never used in Nginx.
-  }
   else {
     $is_nginx = FALSE;
   }
