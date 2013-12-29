@@ -119,10 +119,6 @@ function system_requirements($phase) {
 
   // Test the contents of the .htaccess files.
   if ($phase == 'runtime') {
-
-    // Skip this on BOA since .htaccess is never used in Nginx.
-    return;
-
     // Try to write the .htaccess files first, to prevent false alarms in case
     // (for example) the /tmp directory was wiped.
     file_create_htaccess(file_directory_path());
