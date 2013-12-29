@@ -117,15 +117,12 @@ function system_requirements($phase) {
     $requirements['settings.php']['title'] = $t('Configuration file');
   }
 
-  // Test the web server identity.
-  if (isset($_SERVER['SERVER_SOFTWARE']) && preg_match("/(?:ApacheSolaris|Nginx)/i", $_SERVER['SERVER_SOFTWARE'])) {
-    $is_nginx = TRUE; // Skip this on BOA since .htaccess is never used in Nginx.
-  }
-  else {
-    $is_nginx = FALSE;
-  }
   // Test the contents of the .htaccess files.
-  if ($phase == 'runtime' && !$is_nginx) {
+  if ($phase == 'runtime') {
+
+    // Skip this on BOA since .htaccess is never used in Nginx.
+    return;
+
     // Try to write the .htaccess files first, to prevent false alarms in case
     // (for example) the /tmp directory was wiped.
     file_create_htaccess(file_directory_path());
