@@ -8,7 +8,7 @@
 /**
  * The current system version.
  */
-define('VERSION', '6.30');
+define('VERSION', '6.31');
 
 /**
  * Core API compatibility.
@@ -1964,7 +1964,7 @@ function _system_zonelist() {
  */
 function system_check_http_request() {
   // Try to get the content of the front page via drupal_http_request().
-  $result = drupal_http_request(url('http://drupal.org/', array('absolute' => TRUE)), array(), 'GET', NULL, 0);
+  $result = drupal_http_request(url('http://www.apple.com/', array('absolute' => TRUE)), array(), 'GET', NULL, 0);
   // We only care that we get a HTTP response - this means that Drupal
   // can make a HTTP request.
   $works = isset($result->code) && ($result->code >= 100) && ($result->code < 600);
