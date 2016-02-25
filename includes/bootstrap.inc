@@ -820,6 +820,10 @@ function drupal_load($type, $name) {
  * Note: When sending a Content-Type header, always include a 'charset' type,
  * too. This is necessary to avoid security bugs (e.g. UTF-7 XSS).
  *
+ * Note: No special sanitizing needs to be done to headers. However if a header
+ * value contains a line break, a PHP warning will be thrown and the header
+ * will not be set.
+ *
  * @param $name
  *   The HTTP header name, or a status code followed by a reason phrase, e.g.
  *   "404 Not Found".
@@ -834,6 +838,20 @@ function drupal_set_header($name = NULL, $value = NULL, $append = FALSE) {
 
   if (!isset($name)) {
     return $headers;
+  }
+
+  // Protect against header injection attacks if PHP is too old to do that.
+  // See https://www.drupal.org/SA-CORE-2016-001,
+  // https://www.drupal.org/drupal-6.38-release-notes, and
+  // https://github.com/pressflow/6/pull/101.
+  if (version_compare(PHP_VERSION, '5.1.2', '<')) {
+    foreach (array($name, $value) as $part) {
+      if (strpos($part, "\n") !== FALSE || strpos($part, "\r") !== FALSE) {
+        // Use the same warning message that newer versions of PHP use.
+        trigger_error('Header may not contain more than a single header, new line detected', E_USER_WARNING);
+        return;
+      }
+    }
   }
 
   // Support the Drupal 6 header API
