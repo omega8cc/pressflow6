@@ -59,15 +59,11 @@ function _unicode_check() {
   if (ini_get('mbstring.encoding_translation') != 0) {
     return array(UNICODE_ERROR, $t('Multibyte string input conversion in PHP is active and must be disabled. Check the php.ini <em>mbstring.encoding_translation</em> setting. Please refer to the <a href="@url">PHP mbstring documentation</a> for more information.', array('@url' => 'http://www.php.net/mbstring')));
   }
-  // mbstring.http_input and mbstring.http_output are deprecated and empty by
-  // default in PHP 5.6.
-  if (version_compare(PHP_VERSION, '5.6.0') == -1) {
-    if (ini_get('mbstring.http_input') != 'pass') {
-      return array(UNICODE_ERROR, $t('Multibyte string input conversion in PHP is active and must be disabled. Check the php.ini <em>mbstring.http_input</em> setting. Please refer to the <a href="@url">PHP mbstring documentation</a> for more information.', array('@url' => 'http://www.php.net/mbstring')));
-    }
-    if (ini_get('mbstring.http_output') != 'pass') {
-      return array(UNICODE_ERROR, $t('Multibyte string output conversion in PHP is active and must be disabled. Check the php.ini <em>mbstring.http_output</em> setting. Please refer to the <a href="@url">PHP mbstring documentation</a> for more information.', array('@url' => 'http://www.php.net/mbstring')));
-    }
+  if (ini_get('mbstring.http_input') != 'pass') {
+    return array(UNICODE_ERROR, $t('Multibyte string input conversion in PHP is active and must be disabled. Check the php.ini <em>mbstring.http_input</em> setting. Please refer to the <a href="@url">PHP mbstring documentation</a> for more information.', array('@url' => 'http://www.php.net/mbstring')));
+  }
+  if (ini_get('mbstring.http_output') != 'pass') {
+    return array(UNICODE_ERROR, $t('Multibyte string output conversion in PHP is active and must be disabled. Check the php.ini <em>mbstring.http_output</em> setting. Please refer to the <a href="@url">PHP mbstring documentation</a> for more information.', array('@url' => 'http://www.php.net/mbstring')));
   }
 
   // Set appropriate configuration
@@ -322,6 +318,25 @@ function _mime_header_decode($matches) {
 }
 
 /**
+ * Simple class to use instead of closure in decode_entities().
+ *
+ * @see decode_entities()
+ */
+class DrupalDecodeEntitiesCallback {
+  public $html_entities;
+  public $exclude;
+
+  public function __construct($html_entities, $exclude) {
+    $this->html_entities = $html_entities;
+    $this->exclude = $exclude;
+  }
+
+  public function callback($matches) {
+    return _decode_entities($matches[1], $matches[2], $matches[0], $this->html_entities, $this->exclude);
+  }
+}
+
+/**
  * Decodes all HTML entities (including numerical ones) to regular UTF-8 bytes.
  *
  * Double-escaped entities will only be decoded once ("&amp;lt;" becomes "&lt;",
@@ -338,46 +353,24 @@ function _mime_header_decode($matches) {
  *   The input $text, with all HTML entities decoded once.
  */
 function decode_entities($text, $exclude = array()) {
-  // Flip the exclude list so that we can do quick lookups later.
-  $exclude = array_flip($exclude);
-
-  // Prepare the callback function.
-  _decode_entities_preg_replace_callback(NULL, $exclude);
-
-  // Use a regexp to select all entities in one pass, to avoid decoding
-  // double-escaped entities twice.
-  return preg_replace_callback('/&(#x?)?([A-Za-z0-9]+);/', '_decode_entities_preg_replace_callback', $text);
-}
-
-/**
- * Helper for decode_entities().
- *
- * @param $matches
- *   An array of matches found by preg_replace_callback(). Elements 0, 1, and 2
- *   of $matches must be the original entity, its prefix, and its codepoint.
- * @param $set_exclude
- *   An array of entities that should be excluded from decoding. This should
- *   only be set during a preparatory call before preg_replace_callback().
- *
- * @return
- *   The decoded entity for a given match, or the original encoded entity if
- *   the entity is in the list of excluded entities.
- */
-function _decode_entities_preg_replace_callback($matches = NULL, $set_exclude = NULL) {
-  static $html_entities, $exclude;
+  static $html_entities;
   if (!isset($html_entities)) {
     include_once './includes/unicode.entities.inc';
   }
-  if (isset($set_exclude)) {
-    // This is a preparatory call.
-    $exclude = $set_exclude;
-    return;
-  }
-  return _decode_entities($matches[1], $matches[2], $matches[0], $html_entities, $exclude);
+
+  // Flip the exclude list so that we can do quick lookups later.
+  $exclude = array_flip($exclude);
+
+  // Use object instead of closure to retain PHP 5.2 compatibility.
+  $callback = new DrupalDecodeEntitiesCallback($html_entities, $exclude);
+
+  // Use a regexp to select all entities in one pass, to avoid decoding 
+  // double-escaped entities twice.
+  return preg_replace_callback('/&(#x?)?([A-Za-z0-9]+);/', array($callback, 'callback'), $text);
 }
 
 /**
- * Helper function for decode_entities_preg_replace_callback().
+ * Helper function for decode_entities
  */
 function _decode_entities($prefix, $codepoint, $original, &$html_entities, &$exclude) {
   // Named entity
