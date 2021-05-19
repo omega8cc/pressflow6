@@ -353,9 +353,16 @@ $db_mysql8_reserved_keywords = array(
  *   TRUE if version check passes; otherwise FALSE.
 */
 function db_version_compare($driver, $version, $operator = '>=') {
-  global $db_url;
+  global $db_url, $db_active_name;
 
-  if (substr($db_url, 0, strlen($driver)) === $driver) {
+  if (is_array($db_url)) {
+    $db_active_url = array_key_exists($db_active_name, $db_url) ? $db_url[$db_active_name] : $db_url['default'];
+  }
+  else {
+    $db_active_url = $db_url;
+  }
+
+  if (substr($db_active_url, 0, strlen($driver)) === $driver) {
     if (version_compare(db_version(), $version, $operator)) {
       return TRUE;
     }
