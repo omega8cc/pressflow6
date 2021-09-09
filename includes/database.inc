@@ -353,9 +353,16 @@ $db_mysql8_reserved_keywords = array(
  *   TRUE if version check passes; otherwise FALSE.
 */
 function db_version_compare($driver, $version, $operator = '>=') {
-  global $db_url;
+  global $db_url, $db_active_name;
 
-  if (substr($db_url, 0, strlen($driver)) === $driver) {
+  if (is_array($db_url)) {
+    $db_active_url = array_key_exists($db_active_name, $db_url) ? $db_url[$db_active_name] : $db_url['default'];
+  }
+  else {
+    $db_active_url = $db_url;
+  }
+
+  if (substr($db_active_url, 0, strlen($driver)) === $driver) {
     if (version_compare(db_version(), $version, $operator)) {
       return TRUE;
     }
@@ -415,6 +422,12 @@ function db_prefix_tables($sql) {
 }
 
 /**
+ * Active database connection name.
+ */
+global $db_active_name;
+$db_active_name = FALSE;
+
+/**
  * Activate a database for future queries.
  *
  * If it is necessary to use external databases in a project, this function can
@@ -435,7 +448,8 @@ function db_prefix_tables($sql) {
  */
 function db_set_active($name = 'default') {
   global $db_url, $db_slave_url, $db_type, $active_db, $active_slave_db;
-  static $db_conns, $db_slave_conns, $active_name = FALSE;
+  global $db_active_name;
+  static $db_conns, $db_slave_conns = FALSE;
 
   if (empty($db_url)) {
     include_once 'includes/install.inc';
@@ -477,13 +491,13 @@ function db_set_active($name = 'default') {
 
     $db_conns[$name] = db_connect($connect_url);
     if (!empty($slave_connect_url)) {
-      $db_slave_conns[$name] = db_connect($slave_connect_url); 
+      $db_slave_conns[$name] = db_connect($slave_connect_url);
     }
   }
 
-  $previous_name = $active_name;
+  $previous_name = $db_active_name;
   // Set the active connection.
-  $active_name = $name;
+  $db_active_name = $name;
   $active_db = $db_conns[$name];
   if (isset($db_slave_conns[$name])) {
     $active_slave_db = $db_slave_conns[$name];
@@ -1008,7 +1022,7 @@ function db_ignore_slave() {
     // the old data.
     $duration = variable_get('maximum_replication_lag', 300);
     // Set session variable with amount of time to delay before using slave.
-    // This will stick around for 5 minutes by default. 
+    // This will stick around for 5 minutes by default.
     // There is another $_Session variable 'not_slavesafe' for single queries.
     $_SESSION['ignore_slave_server'] = $_SERVER['REQUEST_TIME'] + $duration;
   }
