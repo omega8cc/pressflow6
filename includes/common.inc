@@ -3953,7 +3953,7 @@ define('ERROR_REPORTING_DISPLAY_ALL', 2);
  * @param $context
  *   An array that points to the active symbol table at the point the error occurred.
  */
-function _drupal_error_handler($error_level, $message, $filename, $line, $context) {
+function _drupal_error_handler($error_level, $message, $filename, $line, $context = NULL) {
   if ($error_level & error_reporting()) {
     // All these constants are documented at http://php.net/manual/en/errorfunc.constants.php
     $types = array(
