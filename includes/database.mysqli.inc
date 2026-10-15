@@ -59,6 +59,12 @@ function db_connect($url) {
     _db_error_page('Unable to use the MySQLi database because the MySQLi extension for PHP is not installed. Check your <code>php.ini</code> to see how you can enable it.');
   }
 
+  // PHP 8.1 made mysqli throw on every failed query and connection. This
+  // driver checks each result itself, and callers rely on a failed query
+  // returning FALSE (cache_set, variable_set and sess_write race on a
+  // duplicate key), so restore the error mode it was written for.
+  mysqli_report(MYSQLI_REPORT_OFF);
+
   $url = parse_url($url);
 
   // Decode urlencoded information in the db connection string
